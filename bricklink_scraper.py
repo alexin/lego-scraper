@@ -2,6 +2,9 @@
 
 import bs4
 import csv
+import errno
+import os
+import shutil
 import sys
 import urllib2
 
@@ -108,24 +111,60 @@ def scrape_model (model) :
     items = scrape_items_table(table)
   return items
 
+def write_items (file, items) :
+  with open(file, 'w') as fp:
+    a = csv.writer(fp, delimiter=',')
+    # Order by name.
+    items_list = sorted(items.values(), key=lambda item: item[3])
+    a.writerows(items_list)
+
+def ensure_path_exists (path) :
+  try :
+    os.makedirs(path)
+  except OSError as exception :
+    if exception.errno != errno.EEXIST :
+      raise
+
 def main () :
-  all_items = {}
+  # Results are saved in a specific folder.
+  ensure_path_exists(os.path.join(os.getcwd(), 'out'))
+
+  two_or_more_models = len(sys.argv) > 2
+
+  if two_or_more_models :
+    # Creates a folder named after each model.
+    foldername = '_'.join(sys.argv[1:])
+    folderpath = os.path.join(os.getcwd(), 'out', foldername)
+    if os.path.exists(folderpath) :
+      shutil.rmtree(folderpath)
+    ensure_path_exists(folderpath)
+
+  all_items = {} # Aggregates all items from all models.
+
+  # Scrapes and saves a file for each model.
   for i in range(1, len(sys.argv)) :
     model = sys.argv[i]
     items = scrape_model(model)
+
+    if two_or_more_models :
+      file = os.path.join('out', foldername, model+'.csv')
+    else : # One model only.
+      file = os.path.join('out', model+'.csv')
+    write_items(file, items)
+
     n_merges = merge_items_into(all_items, items)
+
+  # Prints some statistics.
   print 'Total items:'
   print '  Total parts: '+str(len(all_items))
   print '  Total quantity: '+str(count_total_quantity(all_items))
-  if len(sys.argv) > 2 :
+  if len(sys.argv) > 2 : # Two or more models.
     print '  Items merged: '+str(n_merges)
 
-  with open('bricklink.csv', 'w') as fp:
-    a = csv.writer(fp, delimiter=',')
-    # Orders by name.
-    all_items_list = sorted(all_items.values(), key=lambda item: item[3])
-    for item in all_items_list :
-      a.writerow(item)
+  # Saves a file that aggregates the results from each model.
+  if two_or_more_models :
+    file = os.path.join('out', foldername, 'all.csv')
+    write_items(file, all_items)
 
 if __name__ == "__main__" :
   main()

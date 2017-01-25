@@ -75,10 +75,15 @@ def scrape_part_row (row, items) :
 def scrape_items_table (table) :
   rows = table.find_all('tr', recursive=False)
   n_rows = len(rows);
+  i = 0
+
+  # Advances to the regular items.
+  while i < n_rows and not row_has_strings(rows[i], ['Regular Items:']) :
+    i += 1;
+  i += 2 # skip headers
 
   # REGUALR ITEMS
   regular_items = {}
-  i = 3 # skip headers
   while i < n_rows and is_part_row(rows[i]) :
     scrape_part_row(rows[i], regular_items)
     i += 1
@@ -86,9 +91,13 @@ def scrape_items_table (table) :
   print '    Parts: '+str(len(regular_items))
   print '    Quantity: '+str(count_total_quantity(regular_items))
 
+  # Advances to the extra items.
+  while i < n_rows and not row_has_strings(rows[i], ['Extra Items:']) :
+    i += 1;
+  i += 2; # skip headers
+
   # EXTRA ITEM
   extra_items = {}
-  i += 2; # skip headers
   while i < n_rows and is_part_row(rows[i]) :
     scrape_part_row(rows[i], extra_items)
     i += 1

@@ -19,7 +19,7 @@ $ python bricklink_scraper.py 9392 8547 9398 42043 42065
 Results are saved as CSV files, one for each model. If multiple models are specified, then an additional file is created, aggregating all results.
 
 # Sites supported
-* [bricklink](www.bricklink.com)
+* [bricklink](http://www.bricklink.com/v2/main.page)
 
 # Notes
 The data is currently fit to be imported by Google Spreadsheets.
